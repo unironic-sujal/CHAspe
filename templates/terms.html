@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terms and Policy - CHAspe</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- CSS Stylesheet -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            color: #ffffff;
+            background-color: #000000;
+            background-image: url("{{ url_for('static', filename='images/background.jpeg') }}");
+            background-size: cover;
+            background-attachment: fixed;
+            background-position: center;
+            line-height: 1.6;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .back-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 30px;
+            text-decoration: none;
+            backdrop-filter: blur(8px);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1000;
+            font-size: 0.9rem;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .back-button:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            transform: translateX(-5px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .back-button i {
+            font-size: 0.85rem;
+            margin-right: 6px;
+        }
+
+        .header {
+            text-align: center;
+            padding: 100px 20px;
+            background: rgba(0, 0, 0, 0.7);
+        }
+
+        .title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 10px rgba(255, 255, 255, 0.8);
+        }
+
+        .terms-content {
+            background: rgba(0, 0, 0, 0.8);
+            padding: 40px;
+            border-radius: 15px;
+            margin: 40px auto;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+        }
+
+        .section {
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.8rem;
+            color: #e0e0e0;
+            margin-bottom: 15px;
+        }
+
+        .section-text {
+            color: #bbbbbb;
+            line-height: 1.8;
+            margin-bottom: 15px;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.9);
+            color: #cccccc;
+            font-size: 0.9rem;
+        }
+
+        .footer-text {
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Back Button -->
+    <a href="{{ url_for('home') }}" class="back-button">
+        <i class="fas fa-arrow-left me-2"></i>Back
+    </a>
+
+    <!-- Header Section -->
+    <header class="header">
+        <div class="container">
+            <h1 class="title">Terms and Policy</h1>
+        </div>
+    </header>
+
+    <!-- Terms Content -->
+    <div class="container">
+        <div class="terms-content">
+            <div class="section">
+                <h2 class="section-title">1. Acceptance of Terms</h2>
+                <p class="section-text">
+                    By accessing and using CHAspe, you agree to be bound by these Terms and Policy. If you do not agree with any part of these terms, please do not use our service.
+                </p>
+            </div>
+
+            <div class="section">
+                <h2 class="section-title">2. Service Description</h2>
+                <p class="section-text">
+                    CHAspe provides lunar surface analysis services, including crater detection and surface roughness analysis. Our service is intended for research and educational purposes.
+                </p>
+            </div>
+
+            <div class="section">
+                <h2 class="section-title">3. User Responsibilities</h2>
+                <p class="section-text">
+                    Users are responsible for maintaining the confidentiality of their account information and for all activities that occur under their account. Users must provide accurate and complete information when creating an account.
+                </p>
+            </div>
+
+            <div class="section">
+                <h2 class="section-title">4. Data Usage</h2>
+                <p class="section-text">
+                    We collect and process data as described in our Privacy Policy. By using our service, you consent to such processing and warrant that all data provided by you is accurate.
+                </p>
+            </div>
+
+            <div class="section">
+                <h2 class="section-title">5. Intellectual Property</h2>
+                <p class="section-text">
+                    All content, features, and functionality of CHAspe, including but not limited to text, graphics, logos, and software, are the exclusive property of CHAspe and are protected by international copyright, trademark, and other intellectual property laws.
+                </p>
+            </div>
+
+            <div class="section">
+                <h2 class="section-title">6. Limitation of Liability</h2>
+                <p class="section-text">
+                    CHAspe shall not be liable for any indirect, incidental, special, consequential, or punitive damages resulting from your use of or inability to use the service.
+                </p>
+            </div>
+
+            <div class="section">
+                <h2 class="section-title">7. Changes to Terms</h2>
+                <p class="section-text">
+                    We reserve the right to modify these terms at any time. We will notify users of any material changes via email or through the service.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer Section -->
+    <footer class="footer">
+        <div class="container">
+            <p class="footer-text">
+                © 2024 CHAspe. All Rights Reserved. | Last updated: March 2024
+            </p>
+        </div>
+    </footer>
+</body>
+</html> 

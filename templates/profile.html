@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<style>
+    body {
+        font-family: 'Poppins', sans-serif;
+        background: linear-gradient(135deg, #1a1a1a 0%, #0f0f0f 100%) !important;
+        position: relative;
+        overflow-x: hidden;
+    }
+    
+    body::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: radial-gradient(circle at 50% 0%, rgba(255,255,255,0.1), transparent 60%);
+        pointer-events: none;
+    }
+
+    .card-gloss {
+        background: linear-gradient(145deg, rgba(31,31,31,0.9), rgba(24,24,24,0.95));
+        backdrop-filter: blur(10px);
+    }
+
+    .input-gloss {
+        background: linear-gradient(145deg, rgba(28,28,28,0.8), rgba(22,22,22,0.9));
+        backdrop-filter: blur(5px);
+    }
+
+    .button-gloss {
+        background: linear-gradient(145deg, rgba(88,28,135,0.9), rgba(67,20,102,1));
+    }
+
+    .button-gloss:hover {
+        background: linear-gradient(145deg, rgba(109,40,217,0.9), rgba(88,28,135,1));
+    }
+
+    .detection-card {
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .detection-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+    }
+
+    .back-button {
+        position: fixed;
+        top: 20px;
+        left: 20px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: white;
+        padding: 10px 20px;
+        border-radius: 30px;
+        text-decoration: none;
+        backdrop-filter: blur(8px);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        z-index: 1000;
+        font-size: 0.9rem;
+        letter-spacing: 0.5px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .back-button:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+        transform: translateX(-5px);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .back-button i {
+        font-size: 0.85rem;
+        margin-right: 6px;
+    }
+</style>
+<body class="min-h-screen py-8">
+    <!-- Back Button -->
+    <a href="{{ url_for('home') }}" class="back-button">
+        <i class="fas fa-arrow-left me-2"></i>Back
+    </a>
+
+    <div class="container mx-auto px-4">
+        <!-- Profile Card -->
+        <div class="card-gloss rounded-lg shadow-2xl p-8 max-w-sm w-full mx-auto mb-8 border border-gray-700/30 backdrop-blur-sm">
+            <div class="text-center mb-6">
+                <div class="h-20 w-20 bg-gradient-to-br from-purple-900/80 to-purple-800/90 rounded-full mx-auto flex items-center justify-center mb-4 shadow-lg">
+                    <i class="fas fa-user text-3xl text-purple-200"></i>
+                </div>
+            </div>
+            
+            <div class="space-y-4">
+                <div class="flex items-center space-x-3 p-3 input-gloss rounded-lg border border-gray-700/30">
+                    <i class="fas fa-user text-purple-300"></i>
+                    <span class="text-gray-200">{{ username }}</span>
+                </div>
+                
+                <div class="flex items-center space-x-3 p-3 input-gloss rounded-lg border border-gray-700/30">
+                    <i class="fas fa-envelope text-purple-300"></i>
+                    <span class="text-gray-200">{{ email }}</span>
+                </div>
+                
+                <a href="{{ url_for('logout') }}" 
+                   class="mt-6 w-full inline-flex items-center justify-center px-4 py-3 border-0 text-sm font-medium rounded-lg text-white button-gloss shadow-lg hover:shadow-xl transition-all duration-200">
+                    <i class="fas fa-sign-out-alt mr-2"></i>
+                    Logout
+                </a>
+            </div>
+        </div>
+
+        <!-- Detection History -->
+        <div class="max-w-4xl mx-auto">
+            <h2 class="text-2xl font-bold text-white mb-6 text-center">Detection History</h2>
+            
+            {% if detections %}
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {% for detection in detections %}
+                    <div class="detection-card card-gloss rounded-lg p-6 border border-gray-700/30">
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <h3 class="text-lg font-semibold text-purple-200">Detection #{{ loop.revindex }}</h3>
+                                <p class="text-sm text-gray-400">{{ (detection.created_at.replace(microsecond=0) + timedelta(hours=5, minutes=30)).strftime('%Y-%m-%d %H:%M:%S') }} IST</p>
+                            </div>
+                            <a href="{{ url_for('export_detection', detection_id=detection.id) }}" 
+                               class="text-purple-300 hover:text-purple-200 transition-colors">
+                                <i class="fas fa-download"></i>
+                            </a>
+                        </div>
+                        
+                        <div class="space-y-3">
+                            <div class="flex items-center space-x-3 p-2 input-gloss rounded-lg">
+                                <i class="fas fa-crater text-purple-300"></i>
+                                <span class="text-gray-200">{{ detection.crater_count }} Craters</span>
+                            </div>
+                            
+                            <div class="flex items-center space-x-3 p-2 input-gloss rounded-lg">
+                                <i class="fas fa-chart-line text-purple-300"></i>
+                                <span class="text-gray-200">Roughness: {{ "%.2f"|format(detection.roughness_index) }}%</span>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 flex space-x-2">
+                            <a href="{{ url_for('static', filename='uploads/' + detection.processed_image) }}" 
+                               class="flex-1 text-center py-2 px-4 rounded-lg text-sm font-medium text-white button-gloss hover:shadow-lg transition-all duration-200"
+                               target="_blank">
+                                <i class="fas fa-image mr-2"></i> View Result
+                            </a>
+                            <a href="{{ url_for('static', filename='uploads/' + detection.original_image) }}" 
+                               class="flex-1 text-center py-2 px-4 rounded-lg text-sm font-medium text-white button-gloss hover:shadow-lg transition-all duration-200"
+                               target="_blank">
+                                <i class="fas fa-file-image mr-2"></i> Original
+                            </a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-8">
+                    <div class="text-gray-400 mb-4">
+                        <i class="fas fa-history text-4xl"></i>
+                    </div>
+                    <p class="text-gray-300">No detections yet. Start scanning images to see your history here!</p>
+                    <a href="{{ url_for('scan') }}" 
+                       class="mt-4 inline-flex items-center px-4 py-2 rounded-lg text-white button-gloss hover:shadow-lg transition-all duration-200">
+                        <i class="fas fa-camera mr-2"></i> Start Scanning
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- My Orders Section -->
+        <div class="max-w-4xl mx-auto mt-12">
+            <h2 class="text-2xl font-bold text-white mb-6 text-center">My Orders</h2>
+            
+            {% if orders %}
+                <div class="overflow-hidden card-gloss rounded-lg border border-gray-700/30">
+                    <table class="min-w-full divide-y divide-gray-700/30">
+                        <thead class="bg-black/20">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-purple-300 uppercase tracking-wider">Order #</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-purple-300 uppercase tracking-wider">Date</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-purple-300 uppercase tracking-wider">Total</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-purple-300 uppercase tracking-wider">Status</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-purple-300 uppercase tracking-wider">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-700/30">
+                            {% for order in orders %}
+                                <tr class="hover:bg-gray-800/20">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-200">{{ order.order_number }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-200">{{ order.created_at.strftime('%B %d, %Y') }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-200">${{ "%.2f"|format(order.total_amount) }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        {% if order.status == 'pending' %}
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                                Pending
+                                            </span>
+                                        {% elif order.status == 'processing' %}
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                                Processing
+                                            </span>
+                                        {% elif order.status == 'shipped' %}
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-indigo-100 text-indigo-800">
+                                                Shipped
+                                            </span>
+                                        {% elif order.status == 'delivered' %}
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                                Delivered
+                                            </span>
+                                        {% elif order.status == 'cancelled' %}
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                                                Cancelled
+                                            </span>
+                                        {% else %}
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+                                                {{ order.status }}
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                        <a href="{{ url_for('order_confirmation', order_id=order.id) }}" class="text-purple-300 hover:text-purple-200 transition-colors">
+                                            View Details
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-8 card-gloss rounded-lg border border-gray-700/30">
+                    <div class="text-gray-400 mb-4">
+                        <i class="fas fa-shopping-bag text-4xl"></i>
+                    </div>
+                    <p class="text-gray-300">You haven't placed any orders yet.</p>
+                    <a href="{{ url_for('merch_shop') }}" 
+                       class="mt-4 inline-flex items-center px-4 py-2 rounded-lg text-white button-gloss hover:shadow-lg transition-all duration-200">
+                        <i class="fas fa-shopping-cart mr-2"></i> Shop Now
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

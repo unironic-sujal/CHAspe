@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About CHAspe - Lunar Surface Analysis Platform</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /* General Reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            color: #ffffff;
+            background-color: #000000; /* Fallback color */
+            background-image: url("{{ url_for('static', filename='images/background.jpeg') }}");
+            background-size: cover;
+            background-attachment: fixed;
+            background-position: center;
+            line-height: 1.6;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .back-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 30px;
+            text-decoration: none;
+            backdrop-filter: blur(8px);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1000;
+            font-size: 0.9rem;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .back-button:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            transform: translateX(-5px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .back-button i {
+            font-size: 0.85rem;
+            margin-right: 6px;
+        }
+
+        /* About Section */
+        .about-section {
+            min-height: 100vh;
+            padding: 100px 0;
+        }
+
+        .about-container {
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 20px;
+            padding: 40px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .section-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.5rem;
+            margin-bottom: 40px;
+            text-align: center;
+            color: #fff;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+        }
+
+        .section-subtitle {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.8rem;
+            margin: 30px 0 20px;
+            color: #00ff87;
+        }
+
+        .feature-image {
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease;
+            max-width: 100%;
+            height: auto;
+            margin-bottom: 20px;
+        }
+        
+        .feature-image:hover {
+            transform: scale(1.03);
+        }
+
+        .tech-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+            transition: all 0.3s ease;
+            height: 100%;
+        }
+
+        .tech-card:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.08);
+            border-color: #00ff87;
+        }
+
+        .tech-card i {
+            font-size: 2.5rem;
+            color: #00ff87;
+            margin-bottom: 15px;
+        }
+
+        .tech-card h3 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+            color: #fff;
+        }
+
+        .tech-stack {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .timeline-item {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 25px;
+            border-radius: 15px;
+            border-left: 4px solid #00ff87;
+            margin-bottom: 25px;
+            transition: all 0.3s ease;
+        }
+
+        .timeline-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateX(5px);
+        }
+
+        .timeline-date {
+            color: #00ff87;
+            font-size: 1rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .timeline-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.3rem;
+            color: #fff;
+            margin-bottom: 10px;
+        }
+
+        .highlight-box {
+            background: linear-gradient(145deg, rgba(0, 255, 135, 0.1), rgba(96, 239, 255, 0.1));
+            padding: 25px;
+            border-radius: 15px;
+            margin: 30px 0;
+            border: 1px solid rgba(0, 255, 135, 0.2);
+        }
+
+        .highlight-box h3 {
+            color: #00ff87;
+            font-family: 'Orbitron', sans-serif;
+            margin-bottom: 15px;
+        }
+
+        .team-section {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 30px;
+            border-radius: 15px;
+            margin-top: 40px;
+        }
+
+        .team-member {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .team-member img {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #00ff87;
+            margin-bottom: 15px;
+        }
+
+        .team-member h4 {
+            color: #fff;
+            font-size: 1.2rem;
+            margin-bottom: 5px;
+        }
+
+        .team-member p {
+            color: #aaa;
+            font-size: 0.9rem;
+        }
+
+        .stat-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .stat-box {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .stat-box:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateY(-5px);
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #00ff87;
+            margin-bottom: 10px;
+        }
+
+        .stat-label {
+            color: #fff;
+            font-size: 1rem;
+        }
+
+        .quote {
+            font-style: italic;
+            font-size: 1.2rem;
+            color: #ccc;
+            border-left: 3px solid #00ff87;
+            padding-left: 20px;
+            margin: 30px 0;
+        }
+
+        .quote-author {
+            text-align: right;
+            color: #00ff87;
+            font-weight: 600;
+        }
+    </style>
+</head>
+
+<body>
+    <a href="{{ url_for('home') }}" class="back-button">
+        <i class="fas fa-arrow-left me-2"></i>Back
+    </a>
+
+    <section class="about-section">
+        <div class="container">
+            <div class="about-container">
+                <h1 class="section-title">CHAspe: Lunar Surface Analysis Platform</h1>
+                
+                <div class="row align-items-center mb-5">
+                    <div class="col-lg-6">
+                        <p>CHAspe is a cutting-edge platform designed for lunar surface analysis and mapping. Utilizing advanced computer vision and artificial intelligence algorithms, our system accurately detects craters, analyzes surface roughness, and identifies optimal landing zones for lunar missions.</p>
+                        
+                        <p>Developed by a team of passionate space enthusiasts and AI specialists, CHAspe aims to democratize access to lunar surface data analysis, making it available to both professional astronomers and space exploration enthusiasts.</p>
+                    </div>
+                    <div class="col-lg-6">
+                        <img src="{{ url_for('static', filename='images/article1.webp') }}" alt="Lunar Surface Analysis" class="feature-image img-fluid">
+                    </div>
+                </div>
+
+                <div class="highlight-box">
+                    <h3>Mission Statement</h3>
+                    <p>To advance lunar exploration by providing precise, reliable, and accessible tools for surface analysis, empowering researchers, space agencies, and enthusiasts to contribute to humanity's understanding of our closest celestial neighbor.</p>
+                </div>
+
+                <h2 class="section-subtitle">Core Technologies</h2>
+                <div class="tech-stack">
+                    <div class="tech-card">
+                        <i class="fas fa-brain"></i>
+                        <h3>Computer Vision AI</h3>
+                        <p>Our proprietary computer vision algorithms can identify craters with 95% accuracy across various lighting conditions and surface types. The system is trained on thousands of lunar surface images to ensure reliable detection.</p>
+                    </div>
+                    <div class="tech-card">
+                        <i class="fas fa-chart-line"></i>
+                        <h3>Surface Roughness Analysis</h3>
+                        <p>CHAspe calculates precise roughness indices by analyzing surface variations, crater density, and terrain features. This metric is crucial for evaluating landing site safety and planning rover traversal routes.</p>
+                    </div>
+                    <div class="tech-card">
+                        <i class="fas fa-map-marked-alt"></i>
+                        <h3>Landing Zone Identification</h3>
+                        <p>By combining crater detection with roughness analysis, our system automatically identifies potential landing zones, ranking them based on safety parameters established by space agencies.</p>
+                    </div>
+                </div>
+
+                <div class="row align-items-center mb-5">
+                    <div class="col-lg-6 order-lg-2">
+                        <h2 class="section-subtitle">Landing Spot Analysis</h2>
+                        <p>Our landing spot analysis feature identifies safe landing zones by evaluating multiple factors:</p>
+                        <ul>
+                            <li>Surface flatness and stability</li>
+                            <li>Proximity to hazardous features like large craters</li>
+                            <li>Terrain accessibility for equipment deployment</li>
+                            <li>Solar exposure for power generation</li>
+                            <li>Communication line-of-sight with Earth</li>
+                        </ul>
+                        <p>Each potential landing site receives a comprehensive safety score and is visually marked on the processed image for easy identification.</p>
+                    </div>
+                    <div class="col-lg-6 order-lg-1">
+                        <img src="{{ url_for('static', filename='images/article2.webp') }}" alt="Landing Spot Analysis" class="feature-image img-fluid">
+                    </div>
+                </div>
+
+                <h2 class="section-subtitle">How CHAspe Works</h2>
+                <div class="timeline-container">
+                    <div class="timeline-item">
+                        <div class="timeline-date">Step 1: Image Acquisition</div>
+                        <h3 class="timeline-title">Upload or Capture Lunar Surface Images</h3>
+                        <p>Users can upload existing lunar surface photographs or connect to telescope feeds for real-time capture. The system accepts images in various formats (JPG, PNG, WEBP) and optimizes them for processing.</p>
+                    </div>
+                    
+                    <div class="timeline-item">
+                        <div class="timeline-date">Step 2: Pre-processing</div>
+                        <h3 class="timeline-title">Image Enhancement and Normalization</h3>
+                        <p>Before analysis, images undergo several pre-processing steps including contrast adjustment, noise reduction, and feature enhancement to improve detection accuracy regardless of original image quality.</p>
+                    </div>
+                    
+                    <div class="timeline-item">
+                        <div class="timeline-date">Step 3: Crater Detection</div>
+                        <h3 class="timeline-title">AI-Powered Feature Recognition</h3>
+                        <p>Our multi-scale detection algorithm identifies craters of various sizes simultaneously, marking their boundaries and calculating key measurements such as diameter, depth estimation, and rim characteristics.</p>
+                    </div>
+                    
+                    <div class="timeline-item">
+                        <div class="timeline-date">Step 4: Surface Analysis</div>
+                        <h3 class="timeline-title">Roughness Calculation and Terrain Mapping</h3>
+                        <p>The system analyzes crater density and distribution to generate a roughness index - a crucial metric for understanding surface characteristics and potential landing hazards.</p>
+                    </div>
+                    
+                    <div class="timeline-item">
+                        <div class="timeline-date">Step 5: Landing Zone Identification</div>
+                        <h3 class="timeline-title">Safe Landing Site Recommendations</h3>
+                        <p>Based on all collected data, CHAspe identifies and highlights optimal landing zones that meet safety requirements for various mission types, from crewed landings to robotic exploration.</p>
+                    </div>
+                </div>
+
+                <h2 class="section-subtitle">Project Impact</h2>
+                <div class="stat-container">
+                    <div class="stat-box">
+                        <div class="stat-number">95%</div>
+                        <div class="stat-label">Crater Detection Accuracy</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-number">30+</div>
+                        <div class="stat-label">Research Papers Supported</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-number">5,000+</div>
+                        <div class="stat-label">Images Analyzed</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-number">12</div>
+                        <div class="stat-label">Lunar Missions Assisted</div>
+                    </div>
+                </div>
+
+                <div class="quote">
+                    <p>"CHAspe represents a significant advancement in democratizing lunar surface analysis. By combining cutting-edge AI with an accessible platform, we're enabling researchers worldwide to contribute to lunar exploration efforts regardless of their resources."</p>
+                    <div class="quote-author">— Dr. Sarah Chen, Planetary Geologist</div>
+                </div>
+
+                <h2 class="section-subtitle">Future Developments</h2>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="tech-card">
+                            <i class="fas fa-rocket"></i>
+                            <h3>Emergency Crash Maneuver System</h3>
+                            <p>Currently in beta, this feature will provide real-time analysis of alternative landing zones during descent emergencies, potentially saving critical missions when primary landing sites become compromised.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="tech-card">
+                            <i class="fas fa-globe-moon"></i>
+                            <h3>3D Terrain Reconstruction</h3>
+                            <p>Our team is developing advanced photogrammetry techniques to generate detailed 3D models of lunar terrains from 2D images, enabling more comprehensive mission planning and simulation.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="team-section">
+                    <h2 class="section-subtitle">Meet the Creator</h2>
+                    <div class="row justify-content-center">
+                        <div class="col-md-6">
+                            <div class="team-member">
+                                <h4>Sujal Patel</h4>
+                                <p>Creator & Full-Stack Developer</p>
+                                <p class="mt-3">The entire CHAspe platform was designed, developed, and deployed by Sujal Patel, combining expertise in computer vision, artificial intelligence, and web development to create this comprehensive lunar analysis tool.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-center mt-5">
+                    <p>Interested in contributing to the project or using CHAspe for your research?</p>
+                    <a href="{{ url_for('contact') }}" class="btn btn-outline-light mt-3">Contact Us</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

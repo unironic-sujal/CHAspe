@@ -1,0 +1,35 @@
+# Python bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# Flask instance folder
+instance/
+
+# Database files
+*.db
+*.sqlite
+
+# Environment variables
+.env
+
+# Uploaded files
+detections/
+static/uploads/
+
+# Log files
+*.log
+
+# OS specific files
+.DS_Store
+Thumbs.db 

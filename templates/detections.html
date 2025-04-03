@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Your Detection History</h2>
+    
+    {% if detections %}
+        <div class="row">
+            {% for detection in detections %}
+            <div class="col-md-6 mb-4">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h5 class="card-title">Detection #{{ loop.revindex }}</h5>
+                                <p class="card-text">
+                                    <small class="text-muted">
+                                        Created: {{ (detection.created_at.replace(microsecond=0) + timedelta(hours=5, minutes=30)).strftime('%Y-%m-%d %H:%M:%S') }} IST
+                                    </small>
+                                </p>
+                                <p class="card-text">
+                                    <strong>Crater Count:</strong> {{ detection.crater_count }}<br>
+                                    <strong>Roughness Index:</strong> {{ "%.2f"|format(detection.roughness_index) }}%
+                                </p>
+                            </div>
+                            <div class="col-md-6">
+                                <img src="{{ url_for('static', filename='uploads/' + detection.processed_image) }}" 
+                                     class="img-fluid rounded" alt="Processed Image">
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <a href="{{ url_for('export_detection', detection_id=detection.id) }}" 
+                               class="btn btn-primary btn-sm">
+                                <i class="fas fa-download"></i> Export Results
+                            </a>
+                            <a href="{{ url_for('static', filename='uploads/' + detection.original_image) }}" 
+                               class="btn btn-secondary btn-sm" target="_blank">
+                                <i class="fas fa-image"></i> View Original
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-info">
+            You haven't performed any detections yet. 
+            <a href="{{ url_for('scan') }}" class="alert-link">Start scanning now!</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %} 

@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact Us - CHAspe</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            color: #ffffff;
+            background-color: #000000;
+            background-image: url("{{ url_for('static', filename='images/background.jpeg') }}");
+            background-size: cover;
+            background-attachment: fixed;
+            background-position: center;
+            line-height: 1.6;
+        }
+
+        .back-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 30px;
+            text-decoration: none;
+            backdrop-filter: blur(8px);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1000;
+            font-size: 0.9rem;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .back-button:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            transform: translateX(-5px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .back-button i {
+            font-size: 0.85rem;
+            margin-right: 6px;
+        }
+
+        .contact-section {
+            min-height: 100vh;
+            padding: 100px 0;
+            display: flex;
+            align-items: center;
+        }
+
+        .contact-container {
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 20px;
+            padding: 40px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .contact-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.5rem;
+            margin-bottom: 30px;
+            text-align: center;
+            color: #fff;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+        }
+
+        .contact-info {
+            margin-bottom: 40px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+        }
+
+        .contact-info-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .contact-info-item i {
+            font-size: 24px;
+            margin-right: 15px;
+            color: #4a90e2;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-control {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            padding: 12px;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.3);
+            box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.3);
+            color: #fff;
+        }
+
+        .form-control::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        /* Custom styles for select dropdown */
+        select.form-control {
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='rgba(255, 255, 255, 0.5)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 15px center;
+            background-size: 15px;
+            padding-right: 40px;
+        }
+
+        select.form-control option {
+            background-color: #1a1a1a;
+            color: #fff;
+        }
+
+        .btn-submit {
+            background: linear-gradient(45deg, #4a90e2, #63b3ed);
+            border: none;
+            color: white;
+            padding: 12px 30px;
+            border-radius: 10px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(74, 144, 226, 0.4);
+        }
+
+        .alert {
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .contact-section {
+                padding: 60px 20px;
+            }
+            
+            .contact-container {
+                padding: 30px;
+            }
+            
+            .contact-title {
+                font-size: 2rem;
+            }
+        }
+
+        .left-tile {
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 20px;
+            padding: 30px;
+            height: 100%;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .left-tile h2 {
+            font-family: 'Orbitron', sans-serif;
+            color: #fff;
+            margin-bottom: 25px;
+            font-size: 2rem;
+            text-align: center;
+        }
+
+        .contact-method {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .contact-method:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateY(-2px);
+        }
+
+        .contact-method i {
+            font-size: 1.5rem;
+            color: #4a90e2;
+            margin-right: 15px;
+        }
+
+        .method-details h3 {
+            font-family: 'Orbitron', sans-serif;
+            color: #fff;
+            margin-bottom: 5px;
+            font-size: 1.1rem;
+        }
+
+        .method-details p {
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 0;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .contact-note {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            background: rgba(74, 144, 226, 0.1);
+            border-radius: 8px;
+            border: 1px solid rgba(74, 144, 226, 0.2);
+            margin-top: 15px;
+        }
+
+        .contact-note i {
+            color: #4a90e2;
+            font-size: 1rem;
+            margin-right: 10px;
+        }
+
+        .contact-note span {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        /* Remove unused styles */
+        .service-description,
+        .service-features {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- Back Button -->
+    <a href="{{ url_for('home') }}" class="back-button">
+        <i class="fas fa-arrow-left"></i>Back
+    </a>
+
+    <section class="contact-section">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-md-10">
+                    <div class="contact-container">
+                        <h1 class="contact-title">Contact Us</h1>
+
+                        {% with messages = get_flashed_messages(with_categories=true) %}
+                            {% if messages %}
+                                {% for category, message in messages %}
+                                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                                        {{ message }}
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                    </div>
+                                {% endfor %}
+                            {% endif %}
+                        {% endwith %}
+
+                        <div class="row">
+                            <div class="col-lg-4">
+                                <div class="left-tile">
+                                    <h2>Contact Info</h2>
+                                    <div class="contact-info">
+                                        <div class="contact-method">
+                                            <i class="fas fa-envelope-open-text"></i>
+                                            <div class="method-details">
+                                                <h3>Contact Us</h3>
+                                                <p>Send us your questions or feedback using the form.</p>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="contact-method">
+                                            <i class="fas fa-clock"></i>
+                                            <div class="method-details">
+                                                <h3>Response Time</h3>
+                                                <p>We'll respond to your email within 24-48 hours.</p>
+                                            </div>
+                                        </div>
+
+                                        <div class="contact-note">
+                                            <i class="fas fa-info-circle"></i>
+                                            <span>Please provide a valid email address for our response.</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-8">
+                                <form action="{{ url_for('contact') }}" method="POST">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <input type="text" class="form-control" name="name" placeholder="Your Name" required
+                                                    value="{{ current_user.username if current_user.is_authenticated else '' }}">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <input type="email" class="form-control" name="email" placeholder="Your Email" required
+                                                    value="{{ current_user.email if current_user.is_authenticated else '' }}">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <select class="form-control" name="subject" required>
+                                            <option value="" disabled selected>Select a subject</option>
+                                            <option value="Bug Report">Bug Report</option>
+                                            <option value="Suggestion">Suggestion</option>
+                                            <option value="Feedback">Feedback</option>
+                                            <option value="Question">Question</option>
+                                            <option value="Feature Request">Feature Request</option>
+                                            <option value="Other">Other</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <textarea class="form-control" name="message" rows="5" placeholder="Your Message" required></textarea>
+                                    </div>
+                                    <button type="submit" class="btn btn-submit">
+                                        <i class="fas fa-paper-plane me-2"></i>Send Message
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html> 
