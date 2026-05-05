@@ -7,6 +7,7 @@ from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
+from authlib.integrations.flask_client import OAuth
 import os
 import cv2
 import numpy as np
@@ -64,6 +65,18 @@ mail = Mail(app)
 csrf = CSRFProtect(app)
 limiter = Limiter(get_remote_address, app=app, default_limits=[])
 
+# OAuth Setup
+oauth = OAuth(app)
+google = oauth.register(
+    name='google',
+    client_id=os.getenv('GOOGLE_CLIENT_ID'),
+    client_secret=os.getenv('GOOGLE_CLIENT_SECRET'),
+    server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
+    client_kwargs={
+        'scope': 'openid email profile'
+    }
+)
+
 # Database model for Users
 class User(UserMixin, db.Model):
     __tablename__ = 'user'
@@ -72,6 +85,11 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(100), unique=True, nullable=False)
     password = db.Column(db.String(200), nullable=False)
     is_admin = db.Column(db.Boolean, default=False, nullable=False)
+    
+    # Relationships
+    detections = db.relationship('DetectionResult', backref='user', lazy=True, cascade="all, delete-orphan")
+    messages = db.relationship('ContactMessage', backref='user', lazy=True)
+    orders = db.relationship('Order', backref='user', lazy=True)
 
 # Database model for Detection Results
 class DetectionResult(db.Model):
@@ -126,6 +144,10 @@ class Order(db.Model):
     status = db.Column(db.String(20), default='pending')  # pending, processing, shipped, delivered, cancelled
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     payment_method = db.Column(db.String(50), nullable=False)
+
+    # Relationships
+    items = db.relationship('OrderItem', backref='order', lazy=True, cascade="all, delete-orphan")
+    status_history = db.relationship('OrderStatusHistory', backref='order', lazy=True, cascade="all, delete-orphan")
 
     # Contact Information
     first_name = db.Column(db.String(100), nullable=False)
@@ -356,6 +378,39 @@ def auth():
     
     return render_template('auth.html')
 
+@app.route('/login/google')
+def login_google():
+    redirect_uri = url_for('authorize_google', _external=True)
+    return google.authorize_redirect(redirect_uri)
+
+@app.route('/login/google/authorize')
+def authorize_google():
+    token = google.authorize_access_token()
+    user_info = token.get('userinfo')
+    
+    if not user_info:
+        flash('Google login failed.', 'danger')
+        return redirect(url_for('auth'))
+    
+    email = user_info.get('email')
+    name = user_info.get('name', 'Google User')
+    
+    user = User.query.filter_by(email=email).first()
+    if not user:
+        # Create new user
+        import secrets
+        random_password = generate_password_hash(secrets.token_hex(16), method='pbkdf2:sha256', salt_length=8)
+        user = User(
+            username=name,
+            email=email,
+            password=random_password
+        )
+        db.session.add(user)
+        db.session.commit()
+        
+    login_user(user)
+    flash(f'Welcome, {user.username}!', 'success')
+    return redirect(url_for('home'))
 @app.route('/home')
 @login_required
 def home():

@@ -256,6 +256,33 @@ body{
     font-size: 1.2em;
 }
 
+.google-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    background-color: #fff;
+    color: #333;
+    border: 1px solid #ccc;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    margin: 10px 0;
+    width: 100%;
+    transition: background-color 0.3s;
+}
+
+.google-btn:hover {
+    background-color: #f1f1f1;
+}
+
+.google-btn i {
+    color: #DB4437;
+    font-size: 18px;
+}
+
 </style>
 <body>
 
@@ -264,12 +291,9 @@ body{
             <form method="POST" action="{{ url_for('auth') }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <h1>Create Account</h1>
-                <div class="social-icons">
-                    <a href="#" class="icon"><i class="fa-brands fa-google-plus-g"></i></a>
-                    <a href="#" class="icon"><i class="fa-brands fa-facebook-f"></i></a>
-                    <a href="#" class="icon"><i class="fa-brands fa-github"></i></a>
-                    <a href="#" class="icon"><i class="fa-brands fa-linkedin-in"></i></a>
-                </div>
+                <a href="{{ url_for('login_google') }}" class="google-btn">
+                    <i class="fa-brands fa-google"></i> Continue with Google
+                </a>
                 <span>or use your email for registration</span>
                 <input type="text" name="username" placeholder="Name" required>
                 <input type="email" name="email" placeholder="Email" required>
@@ -281,12 +305,9 @@ body{
             <form method="POST" action="{{ url_for('auth') }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <h1>Sign In</h1>
-                <div class="social-icons">
-                    <a href="#" class="icon"><i class="fa-brands fa-google-plus-g"></i></a>
-                    <a href="#" class="icon"><i class="fa-brands fa-facebook-f"></i></a>
-                    <a href="#" class="icon"><i class="fa-brands fa-github"></i></a>
-                    <a href="#" class="icon"><i class="fa-brands fa-linkedin-in"></i></a>
-                </div>
+                <a href="{{ url_for('login_google') }}" class="google-btn">
+                    <i class="fa-brands fa-google"></i> Continue with Google
+                </a>
                 <span>or use your email password</span>
                 <input type="email" name="email" placeholder="Email" required>
                 <input type="password" name="password" placeholder="Password" required>
