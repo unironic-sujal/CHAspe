@@ -36,6 +36,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Email Configuration
 EMAIL_ADDRESS = os.getenv('EMAIL_ADDRESS', 'chaspe.newsletter@gmail.com')
+EMAIL_PASSWORD = os.getenv('EMAIL_PASSWORD', '')
 
 def send_gmail(to_email, subject, body_text):
     """Helper function to send emails using the Gmail API."""
