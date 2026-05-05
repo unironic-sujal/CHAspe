@@ -16,4 +16,3 @@ python init_db.py
 
 # Make sure directories are accessible
 chmod -R 755 static
-chmod -R 755 instance
