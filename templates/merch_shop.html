@@ -638,6 +638,7 @@
                     <div class="row justify-content-center">
                         <div class="col-md-8">
                             <form action="{{ url_for('subscribe') }}" method="POST">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                 <div class="input-group">
                                     <input type="email" name="email" class="form-control" placeholder="Your email address..." required>
                                     <button class="btn btn-primary" type="submit">SUBSCRIBE</button>

@@ -234,6 +234,7 @@
                 <div class="article-form-section mb-5">
                     <h2 class="mb-4">Create New Article</h2>
                     <form method="POST" action="{{ url_for('admin_articles') }}" enctype="multipart/form-data" class="article-form">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="title" class="form-label">Title</label>
@@ -343,6 +344,7 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                     <form id="deleteForm" method="POST" style="display: inline;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <button type="submit" class="btn btn-danger">Delete</button>
                     </form>
                 </div>

@@ -470,6 +470,7 @@
                                 <!-- Reply Form -->
                                 <div id="reply-{{ message.id }}" class="reply-form">
                                     <form action="{{ url_for('admin_reply_message', message_id=message.id) }}" method="POST">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                         <textarea name="reply" class="reply-textarea" placeholder="Write your reply here..." required></textarea>
                                         <button type="submit" class="btn-send">
                                             <i class="fas fa-paper-plane me-2"></i> Send Reply
@@ -533,6 +534,7 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                     <form id="deleteForm" action="" method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <button type="submit" class="btn btn-danger">Delete Message</button>
                     </form>
                 </div>

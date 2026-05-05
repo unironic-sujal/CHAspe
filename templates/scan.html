@@ -171,6 +171,7 @@
                 <div class="scan-card">
                     <h3 class="mb-4">Upload Surface Image</h3>
                     <form action="{{ url_for('scan') }}" method="post" enctype="multipart/form-data" id="scanForm">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <div class="upload-zone" id="dropZone">
                             <input type="file" name="surface_image" id="surface_image" hidden accept="image/*">
                             <div class="upload-icon">

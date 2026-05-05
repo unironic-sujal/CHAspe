@@ -11,9 +11,9 @@ mkdir -p static/uploads/processed
 mkdir -p static/uploads/articles
 mkdir -p detections
 
-# Initialize the database
+# Initialize the database (create all tables)
 python init_db.py
 
 # Make sure directories are accessible
 chmod -R 755 static
-chmod -R 755 instance 
+chmod -R 755 instance

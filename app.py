@@ -2,12 +2,15 @@ from flask import Flask, render_template, redirect, url_for, flash, request, jso
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin, login_user, login_required, current_user, logout_user, LoginManager
 from flask_migrate import Migrate
+from flask_wtf.csrf import CSRFProtect
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 import os
 import cv2
 import numpy as np
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import shutil
 import smtplib
 from email.mime.text import MIMEText
@@ -21,15 +24,9 @@ import time
 load_dotenv()
 
 app = Flask(__name__)
-app.secret_key = 'your-secret-key-here'
-app.config['SECRET_KEY'] = 'your_secret_key'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
-app.config['SQLALCHEMY_BINDS'] = {
-    'detections': 'sqlite:///detections.db',
-    'contacts': 'sqlite:///contacts.db',  # New database for contact messages
-    'articles': 'sqlite:///articles.db',  # New database for articles
-    'orders': 'sqlite:///orders.db'  # New database for orders
-}
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'change-me-in-production')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'postgresql://localhost/chaspe')
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Email Configuration
 EMAIL_ADDRESS = os.getenv('EMAIL_ADDRESS', 'chaspe.newsletter@gmail.com')
@@ -64,78 +61,78 @@ login_manager = LoginManager(app)
 login_manager.init_app(app)
 login_manager.login_view = 'auth'
 mail = Mail(app)
+csrf = CSRFProtect(app)
+limiter = Limiter(get_remote_address, app=app, default_limits=[])
 
 # Database model for Users
 class User(UserMixin, db.Model):
+    __tablename__ = 'user'
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(100), unique=True, nullable=False)
-    password = db.Column(db.String(100), nullable=False)
-    
-    @property
-    def is_admin(self):
-        return self.username == 'admin' and self.email == 'admin'
+    password = db.Column(db.String(200), nullable=False)
+    is_admin = db.Column(db.Boolean, default=False, nullable=False)
 
 # Database model for Detection Results
 class DetectionResult(db.Model):
-    __bind_key__ = 'detections'
+    __tablename__ = 'detection_result'
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, nullable=False)
-    username = db.Column(db.String(100), nullable=False)  # Store username for reference
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    username = db.Column(db.String(100), nullable=False)
     original_image = db.Column(db.String(255), nullable=False)
     processed_image = db.Column(db.String(255), nullable=False)
     crater_count = db.Column(db.Integer, nullable=False)
     roughness_index = db.Column(db.Float, nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     settings = db.Column(db.JSON)
 
 # Database model for Contact Messages
 class ContactMessage(db.Model):
-    __bind_key__ = 'contacts'
+    __tablename__ = 'contact_message'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(120), nullable=False)
     subject = db.Column(db.String(200), nullable=False)
     message = db.Column(db.Text, nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    user_id = db.Column(db.Integer, nullable=True)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
     status = db.Column(db.String(20), default='pending')
     replied_at = db.Column(db.DateTime, nullable=True)
 
 # Database model for Articles
 class Article(db.Model):
-    __bind_key__ = 'articles'
+    __tablename__ = 'article'
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(200), nullable=False)
     subtitle = db.Column(db.String(200))
     content = db.Column(db.Text, nullable=False)
-    image_url = db.Column(db.String(500))  # URL for article cover image
+    image_url = db.Column(db.String(500))
     author = db.Column(db.String(100), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     status = db.Column(db.String(20), default='draft')  # draft, published, archived
-    category = db.Column(db.String(50))  # e.g., news, tutorial, research
-    tags = db.Column(db.String(200))  # Comma-separated tags
-    views = db.Column(db.Integer, default=0)  # Track number of views
+    category = db.Column(db.String(50))
+    tags = db.Column(db.String(200))
+    views = db.Column(db.Integer, default=0)
 
 class Order(db.Model):
-    __bind_key__ = 'orders'
+    __tablename__ = 'order'
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     order_number = db.Column(db.String(20), unique=True, nullable=False)
     total_amount = db.Column(db.Float, nullable=False)
     shipping_fee = db.Column(db.Float, nullable=False)
     tax_amount = db.Column(db.Float, nullable=False)
     status = db.Column(db.String(20), default='pending')  # pending, processing, shipped, delivered, cancelled
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     payment_method = db.Column(db.String(50), nullable=False)
-    
+
     # Contact Information
     first_name = db.Column(db.String(100), nullable=False)
     last_name = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(120), nullable=False)
     phone = db.Column(db.String(20), nullable=False)
-    
+
     # Shipping Address
     address = db.Column(db.String(200), nullable=False)
     apartment = db.Column(db.String(100))
@@ -145,20 +142,20 @@ class Order(db.Model):
     country = db.Column(db.String(100), nullable=False)
 
 class OrderItem(db.Model):
-    __bind_key__ = 'orders'
+    __tablename__ = 'order_item'
     id = db.Column(db.Integer, primary_key=True)
-    order_id = db.Column(db.Integer, nullable=False)
+    order_id = db.Column(db.Integer, db.ForeignKey('order.id'), nullable=False)
     product_name = db.Column(db.String(200), nullable=False)
     price = db.Column(db.Float, nullable=False)
     quantity = db.Column(db.Integer, nullable=False)
     size = db.Column(db.String(20))
 
 class OrderStatusHistory(db.Model):
-    __bind_key__ = 'orders'
+    __tablename__ = 'order_status_history'
     id = db.Column(db.Integer, primary_key=True)
-    order_id = db.Column(db.Integer, nullable=False)
+    order_id = db.Column(db.Integer, db.ForeignKey('order.id'), nullable=False)
     status = db.Column(db.String(20), nullable=False)
-    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    timestamp = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     notes = db.Column(db.Text, nullable=True)
 
 def allowed_file(filename):
@@ -324,6 +321,7 @@ def index():
     return render_template('index.html')
 
 @app.route('/auth', methods=['GET', 'POST'])
+@limiter.limit('20 per minute')
 def auth():
     if request.method == 'POST':
         if 'signup' in request.form:
@@ -666,6 +664,7 @@ def logout():
     return redirect(url_for('auth'))
 
 @app.route('/subscribe', methods=['POST'])
+@limiter.limit('5 per hour')
 def subscribe():
     subscriber_email = request.form.get('email')
     if not subscriber_email:
@@ -704,6 +703,7 @@ The CHAspe Team'''
     return redirect(url_for('home'))
 
 @app.route('/contact', methods=['GET', 'POST'])
+@limiter.limit('10 per hour')
 def contact():
     if request.method == 'POST':
         try:
@@ -804,9 +804,7 @@ def cleanup_old_images(user_id, keep_count=10):
             except Exception as e:
                 print(f"Error removing old file {old_file}: {e}")
 
-# Function to check if user is admin
-def is_admin():
-    return current_user.is_authenticated and current_user.email == 'chaspe.newsletter@gmail.com'
+# Helper: check if current user is admin (use current_user.is_admin directly in routes)
 
 @app.route('/articles')
 def articles():
@@ -818,15 +816,16 @@ def articles():
 def article_detail(article_id):
     article = Article.query.get_or_404(article_id)
     # Only show published articles to regular users
-    if article.status != 'published' and not is_admin():
+    user_is_admin = current_user.is_authenticated and current_user.is_admin
+    if article.status != 'published' and not user_is_admin:
         flash('Article not found', 'error')
         return redirect(url_for('articles'))
-    
+
     # Increment view count
     article.views += 1
     db.session.commit()
-    
-    return render_template('article_detail.html', article=article, is_admin=is_admin())
+
+    return render_template('article_detail.html', article=article, is_admin=user_is_admin)
 
 @app.route('/admin/articles', methods=['GET', 'POST'])
 @login_required
@@ -939,30 +938,41 @@ def delete_article(article_id):
     return redirect(url_for('admin_articles'))
 
 @app.route('/admin/login', methods=['GET', 'POST'])
+@limiter.limit('10 per minute')
 def admin_login():
     if request.method == 'POST':
         email = request.form.get('email')
         password = request.form.get('password')
-        
-        # Check if it's the admin credentials
-        if email == 'admin' and password == 'admin':
-            # Create or get admin user
-            admin_user = User.query.filter_by(email='admin').first()
+
+        ADMIN_EMAIL = os.getenv('ADMIN_EMAIL')
+        ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD')
+
+        if not ADMIN_EMAIL or not ADMIN_PASSWORD:
+            flash('Admin credentials not configured.', 'error')
+            return render_template('admin_login.html')
+
+        if email == ADMIN_EMAIL and password == ADMIN_PASSWORD:
+            # Get or create admin user
+            admin_user = User.query.filter_by(email=ADMIN_EMAIL).first()
             if not admin_user:
                 admin_user = User(
                     username='admin',
-                    email='admin',
-                    password=generate_password_hash('admin')
+                    email=ADMIN_EMAIL,
+                    password=generate_password_hash(ADMIN_PASSWORD),
+                    is_admin=True
                 )
                 db.session.add(admin_user)
                 db.session.commit()
-            
+            elif not admin_user.is_admin:
+                admin_user.is_admin = True
+                db.session.commit()
+
             login_user(admin_user)
             flash('Admin login successful!', 'success')
             return redirect(url_for('admin_dashboard'))
         else:
             flash('Invalid admin credentials.', 'error')
-    
+
     return render_template('admin_login.html')
 
 @app.route('/admin')
@@ -995,6 +1005,7 @@ def admin_dashboard():
                          contact_messages=contact_messages)
 
 @app.route('/admin/reply/<int:message_id>', methods=['POST'])
+@login_required
 def admin_reply_message(message_id):
     if not current_user.is_authenticated or not current_user.is_admin:
         flash('Access denied. Admin privileges required.', 'error')
@@ -1018,7 +1029,7 @@ def admin_reply_message(message_id):
 
         # Update message status
         message.status = 'replied'
-        message.replied_at = datetime.utcnow()
+        message.replied_at = datetime.now(timezone.utc)
         db.session.commit()
 
         flash('Reply sent successfully!', 'success')
@@ -1028,6 +1039,7 @@ def admin_reply_message(message_id):
     return redirect(url_for('admin_dashboard'))
 
 @app.route('/admin/logout')
+@login_required
 def admin_logout():
     logout_user()
     flash('Admin logged out successfully.', 'success')
@@ -1311,8 +1323,15 @@ def admin_order_details(order_id):
         status_history=status_history
     )
 
+@app.errorhandler(404)
+def not_found(e):
+    return render_template('errors/404.html'), 404
+
+@app.errorhandler(500)
+def server_error(e):
+    return render_template('errors/500.html'), 500
+
 if __name__ == '__main__':
     with app.app_context():
-        # Create all tables in all databases
         db.create_all()
     app.run(debug=True)

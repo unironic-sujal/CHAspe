@@ -2,6 +2,10 @@
 
 A Flask web application for crater detection and analysis with user authentication, article management, and more.
 
+#git add home.html
+#git commit -m "Changed color in home.html as requested"
+#git push
+
 ## Features
 
 - User authentication and management

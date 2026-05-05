@@ -262,6 +262,7 @@ body{
     <div class="container" id="container">
         <div class="form-container sign-up">
             <form method="POST" action="{{ url_for('auth') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <h1>Create Account</h1>
                 <div class="social-icons">
                     <a href="#" class="icon"><i class="fa-brands fa-google-plus-g"></i></a>
@@ -278,6 +279,7 @@ body{
         </div>
         <div class="form-container sign-in">
             <form method="POST" action="{{ url_for('auth') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <h1>Sign In</h1>
                 <div class="social-icons">
                     <a href="#" class="icon"><i class="fa-brands fa-google-plus-g"></i></a>

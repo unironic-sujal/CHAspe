@@ -320,6 +320,7 @@
                             </div>
                             <div class="col-lg-8">
                                 <form action="{{ url_for('contact') }}" method="POST">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                     <div class="row">
                                         <div class="col-md-6">
                                             <div class="form-group">

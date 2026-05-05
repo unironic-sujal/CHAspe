@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>500 — Server Error | CHAspe</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <style>
+        body { display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; background: #0a0a1a; color: #fff; font-family: sans-serif; text-align: center; }
+        .error-box { padding: 60px 40px; }
+        .error-code { font-size: 8rem; font-weight: 900; color: #dc2626; line-height: 1; margin-bottom: 16px; }
+        .error-msg { font-size: 1.5rem; margin-bottom: 12px; }
+        .error-sub { color: #888; margin-bottom: 32px; }
+        .btn { display: inline-block; padding: 12px 28px; background: #4f46e5; color: #fff; border-radius: 8px; text-decoration: none; font-weight: 600; transition: background 0.2s; }
+        .btn:hover { background: #4338ca; }
+    </style>
+</head>
+<body>
+    <div class="error-box">
+        <div class="error-code">500</div>
+        <div class="error-msg">Something Went Wrong</div>
+        <div class="error-sub">An internal server error occurred. We're looking into it.</div>
+        <a href="{{ url_for('home') }}" class="btn">← Back to Home</a>
+    </div>
+</body>
+</html>

@@ -436,6 +436,7 @@
                     <!-- Checkout Form -->
                     <div class="col-lg-8 order-lg-1">
                         <form id="checkout-form" method="POST" action="{{ url_for('checkout') }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <h2 class="section-subtitle">Contact Information</h2>
                             <div class="row mb-4">
                                 <div class="col-md-6 mb-3">

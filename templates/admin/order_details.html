@@ -783,6 +783,7 @@
                             <h2 class="section-subtitle">Update Status</h2>
                             <div class="update-status-form">
                                 <form action="{{ url_for('update_order_status', order_id=order.id) }}" method="POST">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                     <div class="form-group">
                                         <label for="status" class="form-label">Order Status</label>
                                         <select name="status" id="status" class="form-select">
@@ -802,6 +803,7 @@
                             <h2 class="section-subtitle">Admin Notes</h2>
                             <div class="notes-section">
                                 <form action="#" method="POST">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                     <textarea class="admin-notes-input" placeholder="Add private notes about this order (not visible to customer)"></textarea>
                                     <button type="button" class="btn-admin">
                                         <i class="fas fa-save"></i> Save Notes
@@ -894,6 +896,7 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                     <form action="{{ url_for('update_order_status', order_id=order.id) }}" method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <input type="hidden" name="status" value="cancelled">
                         <button type="submit" class="btn btn-danger">Cancel Order</button>
                     </form>

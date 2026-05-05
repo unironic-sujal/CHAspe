@@ -344,6 +344,7 @@
             {% endwith %}
             <div class="offset-lg-3 col-lg-6">
                 <form action="{{ url_for('subscribe') }}" method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <div class="input-group">
                         <input type="email" name="email" class="form-control rounded-0 border-black"
                             placeholder="Write your email address here..." required>

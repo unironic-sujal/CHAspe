@@ -164,6 +164,7 @@
     <div class="login-container">
         <h1 class="login-title">Admin Login</h1>
         <form method="POST" action="{{ url_for('admin_login') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="form-group">
                 <input type="text" name="email" class="form-control" placeholder="Admin Username" required>
             </div>

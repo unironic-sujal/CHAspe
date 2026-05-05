@@ -32,4 +32,11 @@ static/uploads/
 
 # OS specific files
 .DS_Store
-Thumbs.db 
+Thumbs.db
+
+# IDE / temp runner files
+tempCodeRunnerFile.py
+.vscode/
+
+# Flask-Migrate (if not committing migrations)
+# migrations/
