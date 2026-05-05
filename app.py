@@ -21,6 +21,9 @@ from dotenv import load_dotenv
 from flask_mail import Mail, Message
 import json
 import time
+import base64
+from google.oauth2.credentials import Credentials
+from googleapiclient.discovery import build
 
 # Load environment variables
 load_dotenv()
@@ -33,7 +36,40 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Email Configuration
 EMAIL_ADDRESS = os.getenv('EMAIL_ADDRESS', 'chaspe.newsletter@gmail.com')
-EMAIL_PASSWORD = os.getenv('EMAIL_PASSWORD')
+
+def send_gmail(to_email, subject, body_text):
+    """Helper function to send emails using the Gmail API."""
+    try:
+        # Load credentials from environment variable or local file
+        token_json_str = os.getenv('GMAIL_TOKEN_JSON')
+        if token_json_str:
+            creds_dict = json.loads(token_json_str)
+            creds = Credentials.from_authorized_user_info(creds_dict)
+        elif os.path.exists('token.json'):
+            creds = Credentials.from_authorized_user_file('token.json')
+        else:
+            print("Email Error: Missing GMAIL_TOKEN_JSON or token.json")
+            return False
+
+        service = build('gmail', 'v1', credentials=creds)
+        
+        # Create message
+        message = MIMEMultipart()
+        message['To'] = to_email
+        message['From'] = EMAIL_ADDRESS
+        message['Subject'] = subject
+        message.attach(MIMEText(body_text, 'plain'))
+        
+        # Encode message
+        encoded_message = base64.urlsafe_b64encode(message.as_bytes()).decode()
+        create_message = {'raw': encoded_message}
+        
+        # Send
+        service.users().messages().send(userId="me", body=create_message).execute()
+        return True
+    except Exception as e:
+        print(f"Gmail API Error: {str(e)}")
+        return False
 
 # Updated upload folder structure
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
@@ -729,12 +765,6 @@ def subscribe():
         return redirect(url_for('home'))
     
     try:
-        # Create message
-        msg = MIMEMultipart()
-        msg['From'] = EMAIL_ADDRESS
-        msg['To'] = subscriber_email
-        msg['Subject'] = 'Welcome to CHAspe Newsletter!'
-
         body = '''Thank you for subscribing to the CHAspe newsletter!
 
 We're excited to keep you updated with the latest developments in lunar surface analysis and our platform's features.
@@ -742,16 +772,13 @@ We're excited to keep you updated with the latest developments in lunar surface 
 Best regards,
 The CHAspe Team'''
 
-        msg.attach(MIMEText(body, 'plain'))
-
-        # Create SMTP session
-        with smtplib.SMTP('smtp.gmail.com', 587, timeout=5) as server:
-            server.starttls()
-            server.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
-            text = msg.as_string()
-            server.send_message(msg)
-
-        flash('Thank you for subscribing! Please check your email.', 'success')
+        # Send using Gmail API
+        success = send_gmail(subscriber_email, 'Welcome to CHAspe Newsletter!', body)
+        
+        if success:
+            flash('Thank you for subscribing! Please check your email.', 'success')
+        else:
+            flash('There was an error processing your subscription. Please try again later.', 'error')
             
     except Exception as e:
         flash('There was an error processing your subscription. Please try again later.', 'error')
@@ -802,11 +829,7 @@ def contact():
             
             # Try to send auto-reply email
             try:
-                if EMAIL_PASSWORD:  # Only try to send email if password is configured
-                    auto_reply = Message(
-                        'Thank you for contacting CHAspe',
-                        recipients=[email],
-                        body=f"""Dear {name},
+                body_text = f"""Dear {name},
 
 Thank you for reaching out to us. We have received your message and will get back to you within 24-48 hours.
 
@@ -815,9 +838,9 @@ Subject: {subject}
 
 Best regards,
 CHAspe Team"""
-                    )
-                    mail.send(auto_reply)
-                    print("Auto-reply email sent successfully")
+                
+                send_gmail(email, 'Thank you for contacting CHAspe', body_text)
+                print("Auto-reply email sent successfully via Gmail API")
             except Exception as email_error:
                 print(f"Email error: {str(email_error)}")
                 # Don't show error to user since message was saved
@@ -1077,19 +1100,16 @@ def admin_reply_message(message_id):
 
     try:
         # Send email reply
-        msg = Message(
-            subject=f"Re: {message.subject}",
-            recipients=[message.email],
-            body=reply_text
-        )
-        mail.send(msg)
-
-        # Update message status
-        message.status = 'replied'
-        message.replied_at = datetime.now(timezone.utc)
-        db.session.commit()
-
-        flash('Reply sent successfully!', 'success')
+        success = send_gmail(message.email, f"Re: {message.subject}", reply_text)
+        
+        if success:
+            # Update message status
+            message.status = 'replied'
+            message.replied_at = datetime.now(timezone.utc)
+            db.session.commit()
+            flash('Reply sent successfully!', 'success')
+        else:
+            flash('Error sending reply via Gmail API.', 'error')
     except Exception as e:
         flash(f'Error sending reply: {str(e)}', 'error')
 

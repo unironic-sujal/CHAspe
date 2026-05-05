@@ -39,4 +39,9 @@ tempCodeRunnerFile.py
 .vscode/
 
 # Flask-Migrate (if not committing migrations)
-# migrations/
+# migrations/
+
+# OAuth Secrets
+credentials.json
+token.json
+client_secret_*.json
