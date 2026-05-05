@@ -745,7 +745,7 @@ The CHAspe Team'''
         msg.attach(MIMEText(body, 'plain'))
 
         # Create SMTP session
-        with smtplib.SMTP('smtp.gmail.com', 587) as server:
+        with smtplib.SMTP('smtp.gmail.com', 587, timeout=5) as server:
             server.starttls()
             server.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
             text = msg.as_string()
