@@ -250,64 +250,56 @@ def detect_craters(image_path):
     
     all_craters = []
     
-    # Method 1: Adaptive Thresholding to find dark crater shadows
-    thresh = cv2.adaptiveThreshold(denoised, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, 
-                                   cv2.THRESH_BINARY_INV, 21, 5)
+    # Use Hough Circles which is specifically designed for detecting circular craters
+    # param2 is the sensitivity: higher = fewer false positives
+    circles = cv2.HoughCircles(
+        denoised,
+        cv2.HOUGH_GRADIENT,
+        dp=1.2,              
+        minDist=20,          
+        param1=50,           
+        param2=25,           
+        minRadius=8,         
+        maxRadius=150        
+    )
     
-    # Morphological operations to clean up noise and connect regions
-    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
-    opened = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel, iterations=1)
-    closed = cv2.morphologyEx(opened, cv2.MORPH_CLOSE, kernel, iterations=2)
-    
-    # Find contours
-    contours, _ = cv2.findContours(closed, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    
-    for contour in contours:
-        # Get bounding rectangle
-        x, y, w, h = cv2.boundingRect(contour)
-        
-        # Filter based on size (prevent noise and massive artifacts)
-        area = cv2.contourArea(contour)
-        if area < 20 or area > (width * height * 0.1):
-            continue
+    if circles is not None:
+        circles = np.round(circles[0, :]).astype("int")
+        for (x, y, r) in circles:
+            # Create a synthetic circular contour for the existing drawing logic
+            pts = []
+            for angle in range(0, 360, 10):
+                px = int(x + r * np.cos(np.radians(angle)))
+                py = int(y + r * np.sin(np.radians(angle)))
+                pts.append([[px, py]])
+            contour = np.array(pts, dtype=np.int32)
             
-        # Aspect Ratio Filter (craters are generally roughly square/circular)
-        aspect_ratio = float(w) / h if h > 0 else 0
-        if aspect_ratio < 0.4 or aspect_ratio > 2.5:
-            continue
-        
-        # Calculate circularity
-        perimeter = cv2.arcLength(contour, True)
-        if perimeter == 0:
-            continue
+            bx = max(0, x - r)
+            by = max(0, y - r)
+            bw = 2 * r
+            bh = 2 * r
+            area = np.pi * (r ** 2)
             
-        circularity = 4 * np.pi * area / (perimeter * perimeter)
-        
-        # Craters can be elliptical due to perspective, so circularity doesn't need to be perfect
-        if circularity < 0.3:
-            continue
+            # Verify the crater by checking if it has a darker interior/shadow
+            mask = np.zeros(gray.shape, np.uint8)
+            cv2.circle(mask, (x, y), max(1, int(r*0.8)), (255), -1)
+            inside_mean = cv2.mean(gray, mask=mask)[0]
             
-        # Check intensity gradient (ensure it's actually darker inside the shadow)
-        mask = np.zeros(gray.shape, np.uint8)
-        cv2.drawContours(mask, [contour], -1, (255), -1)
-        
-        inside_mean = cv2.mean(gray, mask=mask)[0]
-        
-        # Dilate mask for outside region
-        outside_mask = cv2.dilate(mask, kernel, iterations=3) - mask
-        outside_mean = cv2.mean(gray, mask=outside_mask)[0]
-        
-        # Craters should generally have a darker interior shadow than the surrounding rim
-        if abs(inside_mean - outside_mean) < 10:
-            continue
+            outside_mask = np.zeros(gray.shape, np.uint8)
+            cv2.circle(outside_mask, (x, y), int(r*1.2), (255), -1)
+            cv2.subtract(outside_mask, mask, outside_mask)
+            outside_mean = cv2.mean(gray, mask=outside_mask)[0]
             
-        # Store valid crater
-        all_craters.append({
-            'contour': contour,
-            'bounds': (x, y, w, h),
-            'area': area,
-            'confidence': circularity * abs(inside_mean - outside_mean) / 255
-        })
+            # Craters must have some contrast difference due to shadows
+            if abs(inside_mean - outside_mean) < 5:
+                continue
+                
+            all_craters.append({
+                'contour': contour,
+                'bounds': (bx, by, bw, bh),
+                'area': area,
+                'confidence': 1.0
+            })
     
     # Remove overlapping detections
     filtered_craters = []
