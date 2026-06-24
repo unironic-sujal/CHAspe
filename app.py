@@ -250,56 +250,58 @@ def detect_craters(image_path):
     
     all_craters = []
     
-    # Use Hough Circles which is specifically designed for detecting circular craters
-    # param2 is the sensitivity: higher = fewer false positives (and much faster)
-    circles = cv2.HoughCircles(
-        denoised,
-        cv2.HOUGH_GRADIENT,
-        dp=1.0,              
-        minDist=30,          
-        param1=50,           
-        param2=40,           
-        minRadius=10,         
-        maxRadius=150        
-    )
+    # Use Adaptive Thresholding to find dark crater shadows
+    # This is lightning fast and completely prevents 502 timeouts on Render
+    thresh = cv2.adaptiveThreshold(denoised, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, 
+                                   cv2.THRESH_BINARY_INV, 31, 5)
     
-    if circles is not None:
-        circles = np.round(circles[0, :]).astype("int")
-        for (x, y, r) in circles:
-            # Create a synthetic circular contour for the existing drawing logic
-            pts = []
-            for angle in range(0, 360, 10):
-                px = int(x + r * np.cos(np.radians(angle)))
-                py = int(y + r * np.sin(np.radians(angle)))
-                pts.append([[px, py]])
-            contour = np.array(pts, dtype=np.int32)
+    # Morphological operations to clean up noise
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
+    opened = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel, iterations=1)
+    closed = cv2.morphologyEx(opened, cv2.MORPH_CLOSE, kernel, iterations=2)
+    
+    # Find contours
+    contours, _ = cv2.findContours(closed, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    
+    for contour in contours:
+        x, y, w, h = cv2.boundingRect(contour)
+        
+        # STRICT AREA FILTER: Ignores tiny dust and noise
+        area = cv2.contourArea(contour)
+        if area < 80 or area > (width * height * 0.1):
+            continue
             
-            bx = max(0, x - r)
-            by = max(0, y - r)
-            bw = 2 * r
-            bh = 2 * r
-            area = np.pi * (r ** 2)
+        # STRICT ASPECT RATIO: Must be roughly square/circular, no elongated lines
+        aspect_ratio = float(w) / h if h > 0 else 0
+        if aspect_ratio < 0.6 or aspect_ratio > 1.4:
+            continue
+        
+        perimeter = cv2.arcLength(contour, True)
+        if perimeter == 0:
+            continue
             
-            # Verify the crater by checking if it has a darker interior/shadow
-            mask = np.zeros(gray.shape, np.uint8)
-            cv2.circle(mask, (x, y), max(1, int(r*0.8)), (255), -1)
-            inside_mean = cv2.mean(gray, mask=mask)[0]
+        # STRICT CIRCULARITY: Must be round (perfect circle = 1.0)
+        circularity = 4 * np.pi * area / (perimeter * perimeter)
+        if circularity < 0.5:
+            continue
             
-            outside_mask = np.zeros(gray.shape, np.uint8)
-            cv2.circle(outside_mask, (x, y), int(r*1.2), (255), -1)
-            cv2.subtract(outside_mask, mask, outside_mask)
-            outside_mean = cv2.mean(gray, mask=outside_mask)[0]
+        # Check intensity gradient to ensure it's a real shadow
+        mask = np.zeros(gray.shape, np.uint8)
+        cv2.drawContours(mask, [contour], -1, (255), -1)
+        inside_mean = cv2.mean(gray, mask=mask)[0]
+        
+        outside_mask = cv2.dilate(mask, kernel, iterations=3) - mask
+        outside_mean = cv2.mean(gray, mask=outside_mask)[0]
+        
+        if abs(inside_mean - outside_mean) < 10:
+            continue
             
-            # Craters must have some contrast difference due to shadows
-            if abs(inside_mean - outside_mean) < 5:
-                continue
-                
-            all_craters.append({
-                'contour': contour,
-                'bounds': (bx, by, bw, bh),
-                'area': area,
-                'confidence': 1.0
-            })
+        all_craters.append({
+            'contour': contour,
+            'bounds': (x, y, w, h),
+            'area': area,
+            'confidence': circularity
+        })
     
     # Remove overlapping detections
     filtered_craters = []
