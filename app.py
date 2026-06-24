@@ -251,15 +251,15 @@ def detect_craters(image_path):
     all_craters = []
     
     # Use Hough Circles which is specifically designed for detecting circular craters
-    # param2 is the sensitivity: higher = fewer false positives
+    # param2 is the sensitivity: higher = fewer false positives (and much faster)
     circles = cv2.HoughCircles(
         denoised,
         cv2.HOUGH_GRADIENT,
-        dp=1.2,              
-        minDist=20,          
+        dp=1.0,              
+        minDist=30,          
         param1=50,           
-        param2=25,           
-        minRadius=8,         
+        param2=40,           
+        minRadius=10,         
         maxRadius=150        
     )
     
