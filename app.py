@@ -245,84 +245,69 @@ def detect_craters(image_path):
     clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
     enhanced = clahe.apply(gray)
     
-    # Denoise the image using median blur (drastically faster than fastNlMeansDenoising)
+    # Denoise the image using median blur
     denoised = cv2.medianBlur(enhanced, 5)
     
-    # Create different scales for crater detection
-    scales = [(0.5, 15), (1.0, 25), (2.0, 35)]
     all_craters = []
     
-    for scale, blur_size in scales:
-        # Resize image for this scale
-        if scale != 1.0:
-            current = cv2.resize(denoised, None, fx=scale, fy=scale)
-        else:
-            current = denoised.copy()
+    # Method 1: Adaptive Thresholding to find dark crater shadows
+    thresh = cv2.adaptiveThreshold(denoised, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, 
+                                   cv2.THRESH_BINARY_INV, 21, 5)
+    
+    # Morphological operations to clean up noise and connect regions
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
+    opened = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel, iterations=1)
+    closed = cv2.morphologyEx(opened, cv2.MORPH_CLOSE, kernel, iterations=2)
+    
+    # Find contours
+    contours, _ = cv2.findContours(closed, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    
+    for contour in contours:
+        # Get bounding rectangle
+        x, y, w, h = cv2.boundingRect(contour)
         
-        # Apply Gaussian blur
-        blurred = cv2.GaussianBlur(current, (blur_size, blur_size), 0)
+        # Filter based on size (prevent noise and massive artifacts)
+        area = cv2.contourArea(contour)
+        if area < 20 or area > (width * height * 0.1):
+            continue
+            
+        # Aspect Ratio Filter (craters are generally roughly square/circular)
+        aspect_ratio = float(w) / h if h > 0 else 0
+        if aspect_ratio < 0.4 or aspect_ratio > 2.5:
+            continue
         
-        # Edge detection
-        edges = cv2.Canny(blurred, 10, 50)
+        # Calculate circularity
+        perimeter = cv2.arcLength(contour, True)
+        if perimeter == 0:
+            continue
+            
+        circularity = 4 * np.pi * area / (perimeter * perimeter)
         
-        # Dilate edges to connect broken contours
-        kernel = np.ones((3,3), np.uint8)
-        dilated = cv2.dilate(edges, kernel, iterations=2)
+        # Craters can be elliptical due to perspective, so circularity doesn't need to be perfect
+        if circularity < 0.3:
+            continue
+            
+        # Check intensity gradient (ensure it's actually darker inside the shadow)
+        mask = np.zeros(gray.shape, np.uint8)
+        cv2.drawContours(mask, [contour], -1, (255), -1)
         
-        # Find contours
-        contours, _ = cv2.findContours(dilated, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        inside_mean = cv2.mean(gray, mask=mask)[0]
         
-        # Process each contour
-        for contour in contours:
-            # Scale back contour points if needed
-            if scale != 1.0:
-                contour = (contour / scale).astype(np.int32)
+        # Dilate mask for outside region
+        outside_mask = cv2.dilate(mask, kernel, iterations=3) - mask
+        outside_mean = cv2.mean(gray, mask=outside_mask)[0]
+        
+        # Craters should generally have a darker interior shadow than the surrounding rim
+        if abs(inside_mean - outside_mean) < 10:
+            continue
             
-            # Get bounding rectangle
-            x, y, w, h = cv2.boundingRect(contour)
-            
-            # Filter based on size
-            area = cv2.contourArea(contour)
-            min_area = 100  # Minimum crater area
-            max_area = width * height * 0.1  # Maximum 10% of image
-            
-            if area < min_area or area > max_area:
-                continue
-            
-            # Calculate circularity
-            perimeter = cv2.arcLength(contour, True)
-            if perimeter == 0:
-                continue
-                
-            circularity = 4 * np.pi * area / (perimeter * perimeter)
-            
-            # More lenient circularity threshold for larger craters
-            min_circularity = 0.4 if area > 5000 else 0.5
-            if circularity < min_circularity:
-                continue
-            
-            # Check intensity gradient
-            mask = np.zeros(gray.shape, np.uint8)
-            cv2.drawContours(mask, [contour], -1, (255), -1)
-            
-            # Calculate mean intensity inside and outside the contour
-            inside_mean = cv2.mean(gray, mask=mask)[0]
-            
-            # Dilate mask for outside region
-            outside_mask = cv2.dilate(mask, kernel, iterations=3) - mask
-            outside_mean = cv2.mean(gray, mask=outside_mask)[0]
-            
-            # Check if there's significant intensity difference
-            if abs(inside_mean - outside_mean) < 10:
-                continue
-            
-            # Store valid crater
-            all_craters.append({
-                'contour': contour,
-                'bounds': (x, y, w, h),
-                'area': area,
-                'confidence': circularity * abs(inside_mean - outside_mean) / 255
-            })
+        # Store valid crater
+        all_craters.append({
+            'contour': contour,
+            'bounds': (x, y, w, h),
+            'area': area,
+            'confidence': circularity * abs(inside_mean - outside_mean) / 255
+        })
     
     # Remove overlapping detections
     filtered_craters = []
