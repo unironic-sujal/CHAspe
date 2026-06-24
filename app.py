@@ -251,9 +251,9 @@ def detect_craters(image_path):
     all_craters = []
     
     # Use Adaptive Thresholding to find dark crater shadows
-    # This is lightning fast and completely prevents 502 timeouts on Render
+    # Increased block size from 31 to 51 to capture larger craters
     thresh = cv2.adaptiveThreshold(denoised, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, 
-                                   cv2.THRESH_BINARY_INV, 31, 5)
+                                   cv2.THRESH_BINARY_INV, 51, 5)
     
     # Morphological operations to clean up noise
     kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
@@ -266,23 +266,23 @@ def detect_craters(image_path):
     for contour in contours:
         x, y, w, h = cv2.boundingRect(contour)
         
-        # STRICT AREA FILTER: Ignores tiny dust and noise
+        # AREA FILTER: Lowered minimum to catch slightly smaller craters
         area = cv2.contourArea(contour)
-        if area < 80 or area > (width * height * 0.1):
+        if area < 40 or area > (width * height * 0.1):
             continue
             
-        # STRICT ASPECT RATIO: Must be roughly square/circular, no elongated lines
+        # ASPECT RATIO: Relaxed to catch elliptical craters caused by perspective/shadows
         aspect_ratio = float(w) / h if h > 0 else 0
-        if aspect_ratio < 0.6 or aspect_ratio > 1.4:
+        if aspect_ratio < 0.4 or aspect_ratio > 2.0:
             continue
         
         perimeter = cv2.arcLength(contour, True)
         if perimeter == 0:
             continue
             
-        # STRICT CIRCULARITY: Must be round (perfect circle = 1.0)
+        # CIRCULARITY: Relaxed to 0.35 to catch imperfectly round craters
         circularity = 4 * np.pi * area / (perimeter * perimeter)
-        if circularity < 0.5:
+        if circularity < 0.35:
             continue
             
         # Check intensity gradient to ensure it's a real shadow
