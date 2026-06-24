@@ -225,18 +225,8 @@ def allowed_file(filename):
 def detect_craters(image_path):
     # Read the image
     img = cv2.imread(image_path)
-    
-    # Resize image if too large to prevent 502 Timeout/OOM errors on Render
-    max_dim = 1024
-    height, width = img.shape[:2]
-    if max(height, width) > max_dim:
-        scale = max_dim / max(height, width)
-        img = cv2.resize(img, None, fx=scale, fy=scale, interpolation=cv2.INTER_AREA)
-        height, width = img.shape[:2]
-        # Overwrite original saved file so UI sizes match
-        cv2.imwrite(image_path, img)
-        
     original = img.copy()
+    height, width = img.shape[:2]
     
     # Convert to grayscale
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -245,8 +235,8 @@ def detect_craters(image_path):
     clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
     enhanced = clahe.apply(gray)
     
-    # Denoise the image using median blur (drastically faster than fastNlMeansDenoising)
-    denoised = cv2.medianBlur(enhanced, 5)
+    # Denoise the image
+    denoised = cv2.fastNlMeansDenoising(enhanced)
     
     # Create different scales for crater detection
     scales = [(0.5, 15), (1.0, 25), (2.0, 35)]
